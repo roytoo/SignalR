@@ -75,6 +75,7 @@ namespace Microsoft.AspNet.SignalR.Client.Store.Tests
                         var proxy = hubConnection.CreateHubProxy("StoreWebSocketTestHub");
                         proxy.On<string>("echo", m =>
                         {
+                            stringBuilder.AppendLine("proxy.On: " + m);
                             receivedMessage = m;
                             messageReceivedWh.Set();
                         });
@@ -84,28 +85,48 @@ namespace Microsoft.AspNet.SignalR.Client.Store.Tests
                                 stateChanged.NewState));
 
                         var reconnectingInvoked = false;
-                        hubConnection.Reconnecting += () => reconnectingInvoked = true;
+                        hubConnection.Reconnecting += () =>
+                        {
+                            stringBuilder.AppendLine("In Reconnecting event handler");
+                            reconnectingInvoked = true;
+                        };
+                            
 
                         var reconnectedWh = new ManualResetEventSlim();
-                        hubConnection.Reconnected += reconnectedWh.Set;
+                        hubConnection.Reconnected += () =>
+                        {
+                            stringBuilder.AppendLine("In Reconnected event handler.");
+                            reconnectedWh.Set();
+                        };
 
                         await hubConnection.Start(new WebSocketTransport {ReconnectDelay = new TimeSpan(0, 0, 0, 500)});
+
+                        stringBuilder.AppendLine("Connection started");
 
                         try
                         {
                             await proxy.Invoke("ForceReconnect");
+                            stringBuilder.AppendLine("Should never get here.");
                         }
                         catch (InvalidOperationException)
                         {
+                            stringBuilder.AppendLine("In exception handler");
                         }
 
+                        stringBuilder.AppendLine("waiting for reconnected event");
                         Assert.True(await Task.Run(() => reconnectedWh.Wait(5000)));
+                        
+                        stringBuilder.AppendLine("Asserts");
                         Assert.True(reconnectingInvoked);
                         Assert.Equal(ConnectionState.Connected, hubConnection.State);
 
+                        stringBuilder.AppendLine("Invoking Echo");
                         await proxy.Invoke("Echo", "MyMessage");
 
+                        stringBuilder.AppendLine("Waiting for message received");
                         await Task.Run(() => messageReceivedWh.Wait(5000));
+
+                        stringBuilder.AppendLine("Almost done");
                         Assert.Equal("MyMessage", receivedMessage);
                     }
 
