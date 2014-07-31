@@ -1,4 +1,6 @@
 ﻿
+using System.IO;
+using System.Text;
 using Microsoft.AspNet.SignalR.Client.Transports;
 using System;
 using System.Collections.Generic;
@@ -51,59 +53,85 @@ namespace Microsoft.AspNet.SignalR.Client.Store.Tests
         [Fact]
         public async Task WebSocketReconnects()
         {
-            var stateChanges = new List<KeyValuePair<ConnectionState, ConnectionState>>();
+            var stringBuilder = new StringBuilder();
 
-            using (var hubConnection = new HubConnection(HubUrl))
+            for (var i = 0; i < 100; i++)
             {
-                string receivedMessage = null;
-                var messageReceivedWh = new ManualResetEventSlim();
-
-                var proxy = hubConnection.CreateHubProxy("StoreWebSocketTestHub");
-                proxy.On<string>("echo", m =>
-                {
-                    receivedMessage = m;
-                    messageReceivedWh.Set();
-                });
-
-                hubConnection.StateChanged += stateChanged => stateChanges.Add(
-                    new KeyValuePair<ConnectionState, ConnectionState>(stateChanged.OldState, stateChanged.NewState));
-
-                var reconnectingInvoked = false;
-                hubConnection.Reconnecting += () => reconnectingInvoked = true;
-
-                var reconnectedWh = new ManualResetEventSlim();
-                hubConnection.Reconnected += reconnectedWh.Set;
-
-                await hubConnection.Start(new WebSocketTransport { ReconnectDelay = new TimeSpan(0, 0, 0, 500)});
+                stringBuilder.Length = 0;
+                stringBuilder.Append("Iteration: ").AppendLine(i.ToString());
 
                 try
                 {
-                    await proxy.Invoke("ForceReconnect");
+                    var stateChanges = new List<KeyValuePair<ConnectionState, ConnectionState>>();
+
+                    using (var hubConnection = new HubConnection(HubUrl))
+                    {
+                        hubConnection.TraceLevel = TraceLevels.All;
+                        hubConnection.TraceWriter = new StringWriter(stringBuilder);
+
+                        string receivedMessage = null;
+                        var messageReceivedWh = new ManualResetEventSlim();
+
+                        var proxy = hubConnection.CreateHubProxy("StoreWebSocketTestHub");
+                        proxy.On<string>("echo", m =>
+                        {
+                            receivedMessage = m;
+                            messageReceivedWh.Set();
+                        });
+
+                        hubConnection.StateChanged += stateChanged => stateChanges.Add(
+                            new KeyValuePair<ConnectionState, ConnectionState>(stateChanged.OldState,
+                                stateChanged.NewState));
+
+                        var reconnectingInvoked = false;
+                        hubConnection.Reconnecting += () => reconnectingInvoked = true;
+
+                        var reconnectedWh = new ManualResetEventSlim();
+                        hubConnection.Reconnected += reconnectedWh.Set;
+
+                        await hubConnection.Start(new WebSocketTransport {ReconnectDelay = new TimeSpan(0, 0, 0, 500)});
+
+                        try
+                        {
+                            await proxy.Invoke("ForceReconnect");
+                        }
+                        catch (InvalidOperationException)
+                        {
+                        }
+
+                        Assert.True(await Task.Run(() => reconnectedWh.Wait(5000)));
+                        Assert.True(reconnectingInvoked);
+                        Assert.Equal(ConnectionState.Connected, hubConnection.State);
+
+                        await proxy.Invoke("Echo", "MyMessage");
+
+                        await Task.Run(() => messageReceivedWh.Wait(5000));
+                        Assert.Equal("MyMessage", receivedMessage);
+                    }
+
+                    Assert.Equal(
+                        new[]
+                        {
+                            new KeyValuePair<ConnectionState, ConnectionState>(ConnectionState.Disconnected,
+                                ConnectionState.Connecting),
+                            new KeyValuePair<ConnectionState, ConnectionState>(ConnectionState.Connecting,
+                                ConnectionState.Connected),
+                            new KeyValuePair<ConnectionState, ConnectionState>(ConnectionState.Connected,
+                                ConnectionState.Reconnecting),
+                            new KeyValuePair<ConnectionState, ConnectionState>(ConnectionState.Reconnecting,
+                                ConnectionState.Connected),
+                            new KeyValuePair<ConnectionState, ConnectionState>(ConnectionState.Connected,
+                                ConnectionState.Disconnected),
+                        },
+                        stateChanges);
                 }
-                catch (InvalidOperationException)
+                catch (Exception ex)
                 {
+                    throw new Exception(stringBuilder.ToString(), ex);
                 }
-
-                Assert.True(await Task.Run(() => reconnectedWh.Wait(5000)));
-                Assert.True(reconnectingInvoked);
-                Assert.Equal(ConnectionState.Connected, hubConnection.State);
-
-                await proxy.Invoke("Echo", "MyMessage");
-
-                await Task.Run(() => messageReceivedWh.Wait(5000));
-                Assert.Equal("MyMessage", receivedMessage);
             }
 
-            Assert.Equal(
-                new[]
-                {
-                    new KeyValuePair<ConnectionState, ConnectionState>(ConnectionState.Disconnected, ConnectionState.Connecting),
-                    new KeyValuePair<ConnectionState, ConnectionState>(ConnectionState.Connecting, ConnectionState.Connected),
-                    new KeyValuePair<ConnectionState, ConnectionState>(ConnectionState.Connected, ConnectionState.Reconnecting),
-                    new KeyValuePair<ConnectionState, ConnectionState>(ConnectionState.Reconnecting, ConnectionState.Connected),
-                    new KeyValuePair<ConnectionState, ConnectionState>(ConnectionState.Connected, ConnectionState.Disconnected),
-                },
-                stateChanges);
+            throw new Exception(stringBuilder.ToString());
         }
 
         [Fact]
