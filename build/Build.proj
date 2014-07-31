@@ -251,7 +251,7 @@
            Verbose="true" />
 
     <!-- Microsoft.AspNet.SignalR.Client.Store.TestHost.exe is a host required to run some functional Store tests -->   
-    <ExecAsync Executable="$(ProjectArtifactsDir)\Microsoft.AspNet.SignalR.Client.Store.TestHost\Microsoft.AspNet.SignalR.Client.Store.TestHost.exe" Arguments="600000" />
+    <ExecAsync Executable="$(ProjectArtifactsDir)\Microsoft.AspNet.SignalR.Client.Store.TestHost\Microsoft.AspNet.SignalR.Client.Store.TestHost.exe" Arguments="120000" />
     
     <xunit Assemblies="$(ProjectArtifactsDir)\Microsoft.AspNet.SignalR.Client.Store.Tests\Microsoft.AspNet.SignalR.Client.Store.Tests.dll"
            Xml="$(TestResultsPath)\Microsoft.AspNet.SignalR.Client.Store.Tests.XunitResults.xml"
