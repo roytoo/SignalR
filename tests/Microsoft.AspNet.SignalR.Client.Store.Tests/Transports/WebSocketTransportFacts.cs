@@ -168,6 +168,7 @@ namespace Microsoft.AspNet.SignalR.Client.Transports
             Assert.Equal(1, fakeConnection.GetInvocations("Trace").Count());
         }
 
+        /*
         [Fact]
         public async Task SendChecksInputArguments()
         {
@@ -199,7 +200,7 @@ namespace Microsoft.AspNet.SignalR.Client.Transports
                 Resources.GetResourceString("Error_WebSocketUninitialized"),
                 (await Assert.ThrowsAsync<InvalidOperationException>(
                     async () => await new WebSocketTransport().Send(new FakeConnection(), null, null))).Message);
-        }
+        }*/
 
         [Fact]
         public async Task ReconnectStartsNewWebSocket()

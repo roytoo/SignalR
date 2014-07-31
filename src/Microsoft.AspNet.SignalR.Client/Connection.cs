@@ -700,6 +700,8 @@ namespace Microsoft.AspNet.SignalR.Client
         /// <returns>A task that represents when the data has been sent.</returns>
         public virtual Task Send(string data)
         {
+            Trace(TraceLevels.Messages, "Send called");
+
             if (State == ConnectionState.Disconnected)
             {
                 throw new InvalidOperationException(String.Format(CultureInfo.CurrentCulture, Resources.Error_DataCannotBeSentConnectionDisconnected));

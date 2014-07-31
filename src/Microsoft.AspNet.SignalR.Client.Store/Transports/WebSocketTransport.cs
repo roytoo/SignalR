@@ -138,6 +138,8 @@ namespace Microsoft.AspNet.SignalR.Client.Transports
 
         public override Task Send(IConnection connection, string data, string connectionData)
         {
+            connection.Trace(TraceLevels.Messages, "WebsocketTransport.Send called");
+
             if (connection == null)
             {
                 throw new ArgumentNullException("connection");
@@ -150,17 +152,23 @@ namespace Microsoft.AspNet.SignalR.Client.Transports
                 throw new InvalidOperationException(Resources.GetResourceString("Error_WebSocketUninitialized"));
             }
 
-            return Send(webSocket, data);
+            return Send(connection, webSocket, data);
         }
 
         // internal for testing
-        internal static async Task Send(IWebSocket webSocket, string data)
+        internal static async Task Send(IConnection connection, IWebSocket webSocket, string data)
         {
+            connection.Trace(TraceLevels.Messages, "Internal WebsocketTransport.Send called");
+
             using (var messageWriter = new DataWriter(webSocket.OutputStream))
             {
+                connection.Trace(TraceLevels.Messages, "WriteString");
                 messageWriter.WriteString(data);
+                connection.Trace(TraceLevels.Messages, "StoreAsync");
                 await messageWriter.StoreAsync();
+                connection.Trace(TraceLevels.Messages, "DetachStream");
                 messageWriter.DetachStream();
+                connection.Trace(TraceLevels.Messages, "Done");
             }
         }
         

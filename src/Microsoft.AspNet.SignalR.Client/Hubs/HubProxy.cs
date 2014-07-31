@@ -84,6 +84,8 @@ namespace Microsoft.AspNet.SignalR.Client.Hubs
         [SuppressMessage("Microsoft.Design", "CA1031:DoNotCatchGeneralExceptionTypes", Justification = "Exceptions are flown to the caller")]
         public Task<TResult> Invoke<TResult, TProgress>(string method, Action<TProgress> onProgress, params object[] args)
         {
+            _connection.Trace(TraceLevels.Messages, "Invoke called");
+
             if (method == null)
             {
                 throw new ArgumentNullException("method");
@@ -156,6 +158,8 @@ namespace Microsoft.AspNet.SignalR.Client.Hubs
                 }
             });
 
+            _connection.Trace(TraceLevels.Messages, "Callback registered");
+
             var hubData = new HubInvocation
             {
                 Hub = _hubName,
@@ -171,8 +175,12 @@ namespace Microsoft.AspNet.SignalR.Client.Hubs
 
             var value = _connection.JsonSerializeObject(hubData);
 
+            _connection.Trace(TraceLevels.Messages, "Before Send");
+
             _connection.Send(value).ContinueWith(task =>
             {
+                _connection.Trace(TraceLevels.Messages, "Send continuation");
+
                 if (task.IsCanceled)
                 {
                     _connection.RemoveCallback(callbackId);
