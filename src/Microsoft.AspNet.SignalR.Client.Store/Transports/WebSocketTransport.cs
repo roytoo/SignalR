@@ -102,6 +102,8 @@ namespace Microsoft.AspNet.SignalR.Client.Transports
 
         private void MessageReceived(MessageWebSocket webSocket, MessageWebSocketMessageReceivedEventArgs eventArgs)
         {
+            _connection.Trace(TraceLevels.Messages, "MessageReceived");
+
             MessageReceived(webSocket, new MessageReceivedEventArgsWrapper(eventArgs), _connection, TransportHelper, _initializationHandler);
         }
 
@@ -109,7 +111,9 @@ namespace Microsoft.AspNet.SignalR.Client.Transports
         internal static void MessageReceived(IWebSocket webSocket, IWebSocketResponse webSocketResponse, IConnection connection, 
             TransportHelper transportHelper, TransportInitializationHandler initializationHandler)
         {
-            var response = ReadMessage(webSocketResponse);
+            connection.Trace(TraceLevels.Messages, "Internal MessageReceived");
+
+            var response = ReadMessage(webSocketResponse, connection);
 
             connection.Trace(TraceLevels.Messages, "WS: OnMessage({0})", response);
 
@@ -126,12 +130,16 @@ namespace Microsoft.AspNet.SignalR.Client.Transports
             }
         }
 
-        private static string ReadMessage(IWebSocketResponse webSocketResponse)
+        private static string ReadMessage(IWebSocketResponse webSocketResponse, IConnection connection)
         {
+            connection.Trace(TraceLevels.Messages, "ReadMessage");
+
             var reader = webSocketResponse.GetDataReader();
+
             using ((IDisposable)reader)
             {
                 reader.UnicodeEncoding = UnicodeEncoding.Utf8;
+                connection.Trace(TraceLevels.Messages, "Reading message. Length {0}", reader.UnconsumedBufferLength);
                 return reader.ReadString(reader.UnconsumedBufferLength);
             }
         }
