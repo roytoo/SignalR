@@ -291,7 +291,7 @@
   
   </Target>
 
-  <Target Name="RunUnitTests" DependsOnTargets="RunJSUnitTests; RunNetUnitTests" />
+  <Target Name="RunUnitTests" DependsOnTargets="RunNetUnitTests" />
 
   <Target Name="BuildNetFunctionalTests" DependsOnTargets="CreateOutputDirs">
     <MSBuild Projects="%(FunctionalTestProjects.Identity)"
