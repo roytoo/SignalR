@@ -138,6 +138,11 @@ namespace Microsoft.AspNet.SignalR.Client.Transports
 
         public override Task Send(IConnection connection, string data, string connectionData)
         {
+            if (connection == null)
+            {
+                throw new ArgumentNullException("connection");
+            }
+
             connection.Trace(TraceLevels.Messages, "WebsocketTransport.Send called");
 
             if (connection == null)
