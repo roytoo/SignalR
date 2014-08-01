@@ -14,7 +14,7 @@ namespace Microsoft.AspNet.SignalR.Client.Store.Tests
     public class EndToEndTests
     {
         private const string HubUrl = "http://localhost:42424";
-        [Fact]
+        //[Fact]
         public async Task WebSocketSendReceiveTest()
         {
             const int MessageCount = 3;
@@ -121,7 +121,7 @@ namespace Microsoft.AspNet.SignalR.Client.Store.Tests
                         Assert.Equal(ConnectionState.Connected, hubConnection.State);
 
                         stringBuilder.AppendLine("Invoking Echo");
-                        await proxy.Invoke("Echo", "MyMessage");
+                        Assert.True(Task.Run(async () => await proxy.Invoke("Echo", "MyMessage")).Wait(10000));
 
                         stringBuilder.AppendLine("Waiting for message received");
                         await Task.Run(() => messageReceivedWh.Wait(5000));
@@ -155,7 +155,7 @@ namespace Microsoft.AspNet.SignalR.Client.Store.Tests
             throw new Exception(stringBuilder.ToString());
         }
 
-        [Fact]
+        //[Fact]
         public async Task WebSocketReconnectsIfConnectionLost()
         {
             var receivedMessage = (string)null;
