@@ -121,13 +121,13 @@ namespace Microsoft.AspNet.SignalR.Client.Store.Tests
                         Assert.Equal(ConnectionState.Connected, hubConnection.State);
 
                         stringBuilder.AppendLine("Invoking Echo");
-                        Assert.True(Task.Run(async () => await proxy.Invoke("Echo", "MyMessage")).Wait(10000));
+                        Assert.True(Task.Run(async () => await proxy.Invoke("Echo", "MyMessage" + Guid.NewGuid())).Wait(10000));
 
                         stringBuilder.AppendLine("Waiting for message received");
                         await Task.Run(() => messageReceivedWh.Wait(5000));
 
                         stringBuilder.AppendLine("Almost done");
-                        Assert.Equal("MyMessage", receivedMessage);
+                        Assert.StartsWith("MyMessage", receivedMessage);
                     }
 
                     Assert.Equal(

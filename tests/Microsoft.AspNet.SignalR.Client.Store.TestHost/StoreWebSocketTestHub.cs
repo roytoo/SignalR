@@ -1,5 +1,6 @@
 ﻿using System.Collections.Generic;
 using System;
+using System.IO;
 
 namespace Microsoft.AspNet.SignalR.Client.Store.TestHost
 {
@@ -7,6 +8,7 @@ namespace Microsoft.AspNet.SignalR.Client.Store.TestHost
     {
         public void Echo(string message)
         {
+            File.AppendAllText("C:\\temp\\TestHost.log", string.Format("{0:o} {1}", DateTime.Now, message + Console.Out.NewLine));
             Clients.All.echo(message);
         }
 

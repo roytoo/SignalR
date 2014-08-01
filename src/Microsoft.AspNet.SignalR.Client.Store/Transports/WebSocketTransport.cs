@@ -151,7 +151,7 @@ namespace Microsoft.AspNet.SignalR.Client.Transports
                 throw new ArgumentNullException("connection");
             }
 
-            connection.Trace(TraceLevels.Messages, "WebsocketTransport.Send called");
+            connection.Trace(TraceLevels.Messages, "WebsocketTransport.Send called - sending {0}", data);
 
             if (connection == null)
             {

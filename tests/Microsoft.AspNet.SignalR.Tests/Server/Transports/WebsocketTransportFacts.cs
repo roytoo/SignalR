@@ -8,7 +8,7 @@ namespace Microsoft.AspNet.SignalR.Tests.Server.Transports
 {
     public class WebSocketTransportFacts
     {
-        [Fact]
+        //[Fact]
         public void SendChunkDoesNotSendChunksEagerly()
         {
             // Disable DefaultWebSocketHandler's maxIncomingMessageSize
