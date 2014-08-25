@@ -513,6 +513,25 @@ namespace Microsoft.AspNet.SignalR
         }
 
         [SuppressMessage("Microsoft.Performance", "CA1811:AvoidUncalledPrivateCode", Justification = "This is a shared file")]
+        public static Task<TResult> Then<T, T1, T2, TResult>(this Task<T> task, Func<T, T1, T2, TResult> successor, T1 arg1, T2 arg2)
+        {
+            switch (task.Status)
+            {
+                case TaskStatus.Faulted:
+                    return FromError<TResult>(task.Exception);
+
+                case TaskStatus.Canceled:
+                    return Canceled<TResult>();
+
+                case TaskStatus.RanToCompletion:
+                    return FromMethod(successor, task.Result, arg1, arg2);
+
+                default:
+                    return GenericDelegates<T, TResult, T1, T2, object>.ThenWithArgs(task, successor, arg1, arg2);
+            }
+        }
+
+        [SuppressMessage("Microsoft.Performance", "CA1811:AvoidUncalledPrivateCode", Justification = "This is a shared file")]
         public static Task Then(this Task task, Func<Task> successor)
         {
             switch (task.Status)
@@ -858,6 +877,20 @@ namespace Microsoft.AspNet.SignalR
             try
             {
                 return FromResult<TResult>(func(arg1, arg2));
+            }
+            catch (Exception ex)
+            {
+                return FromError<TResult>(ex);
+            }
+        }
+
+        [SuppressMessage("Microsoft.Performance", "CA1811:AvoidUncalledPrivateCode", Justification = "This is a shared file")]
+        [SuppressMessage("Microsoft.Design", "CA1031:DoNotCatchGeneralExceptionTypes", Justification = "Exceptions are set in a tcs")]
+        public static Task<TResult> FromMethod<T1, T2, T3, TResult>(Func<T1, T2, T3, TResult> func, T1 arg1, T2 arg2, T3 arg3)
+        {
+            try
+            {
+                return FromResult<TResult>(func(arg1, arg2, arg3));
             }
             catch (Exception ex)
             {
@@ -1229,6 +1262,11 @@ namespace Microsoft.AspNet.SignalR
             internal static Task<TResult> ThenWithArgs(Task<T> task, Func<T, T1, TResult> successor, T1 arg1)
             {
                 return TaskRunners<T, TResult>.RunTask(task, t => successor(t.Result, arg1));
+            }
+
+            internal static Task<TResult> ThenWithArgs(Task<T> task, Func<T, T1, T2, TResult> successor, T1 arg1, T2 arg2)
+            {
+                return TaskRunners<T, TResult>.RunTask(task, t => successor(t.Result, arg1, arg2));
             }
 
             internal static Task<Task> ThenWithArgs(Task task, Func<T1, Task> successor, T1 arg1)
