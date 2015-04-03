@@ -11,8 +11,14 @@
         changeState = $.signalR.changeState,
         transportLogic = signalR.transports._logic,
         createFrame = function () {
-            var frame = window.document.createElement("iframe");
-            frame.setAttribute("style", "position:absolute;top:0;left:0;width:0;height:0;visibility:hidden;");
+            var frame = window.document.createElement("iframe"), oStyle = frame.getAttribute("style");
+            // Fix for foreverFrame layout issues under IE 10 when not rendering in "edge" mode
+            oStyle.position = "absolute";
+            oStyle.top = "0";
+            oStyle.left = "0";
+            oStyle.width = "0";
+            oStyle.height = "0";
+            oStyle.visibility = "hidden";
             return frame;
         },
         // Used to prevent infinite loading icon spins in older versions of ie
